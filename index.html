@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>唐诗三百首 · 水墨笺注</title>
+<meta name="description" content="《唐诗三百首》全文在线阅读，按体裁分卷，含原文、译文、注释、赏析。水墨古风排版，支持竖排阅读。">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- ============ 水墨背景 ============ -->
+<div class="ink-bg" aria-hidden="true">
+  <svg class="ink-mountain" viewBox="0 0 1440 480" preserveAspectRatio="none">
+    <defs>
+      <linearGradient id="farHill" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%"   stop-color="#2b3a44" stop-opacity=".10"/>
+        <stop offset="100%" stop-color="#2b3a44" stop-opacity="0"/>
+      </linearGradient>
+      <linearGradient id="midHill" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%"   stop-color="#1d2a33" stop-opacity=".16"/>
+        <stop offset="100%" stop-color="#1d2a33" stop-opacity=".01"/>
+      </linearGradient>
+      <linearGradient id="nearHill" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%"   stop-color="#11191f" stop-opacity=".22"/>
+        <stop offset="100%" stop-color="#11191f" stop-opacity=".02"/>
+      </linearGradient>
+      <filter id="wash"><feGaussianBlur stdDeviation="3"/></filter>
+    </defs>
+    <path filter="url(#wash)" fill="url(#farHill)"
+      d="M0 300 L120 232 L200 268 L310 178 L400 240 L520 150 L640 236 L740 196 L860 262 L980 172 L1100 244 L1220 190 L1330 252 L1440 208 L1440 480 L0 480 Z"/>
+    <path filter="url(#wash)" fill="url(#midHill)"
+      d="M0 372 L90 330 L180 362 L280 300 L360 348 L470 282 L580 350 L700 300 L810 356 L930 296 L1040 352 L1160 306 L1270 358 L1380 318 L1440 348 L1440 480 L0 480 Z"/>
+    <path filter="url(#wash)" fill="url(#nearHill)"
+      d="M0 434 L140 402 L260 432 L380 396 L500 430 L620 398 L760 434 L880 402 L1010 436 L1140 400 L1270 434 L1440 404 L1440 480 L0 480 Z"/>
+  </svg>
+  <span class="ink-blob ink-blob-1"></span>
+  <span class="ink-blob ink-blob-2"></span>
+  <span class="ink-blob ink-blob-3"></span>
+</div>
+
+<!-- ============ 页眉 ============ -->
+<header class="site-header">
+  <button class="icon-btn menu-btn" id="menuBtn" title="目录" aria-label="打开目录">
+    <svg viewBox="0 0 24 24" width="20" height="20"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" fill="none"/></svg>
+  </button>
+
+  <a class="brand" href="#/" id="brandLink">
+    <span class="seal">唐</span>
+    <span class="brand-text">
+      <span class="brand-title">唐诗三百首</span>
+      <span class="brand-sub">蘅塘退士编 · 水墨笺注</span>
+    </span>
+  </a>
+
+  <div class="search-wrap">
+    <svg class="search-icon" viewBox="0 0 24 24" width="16" height="16"><circle cx="11" cy="11" r="6.2" stroke="currentColor" stroke-width="1.6" fill="none"/><path d="M15.6 15.6 20 20" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+    <input type="search" id="searchInput" placeholder="搜索诗题、诗人或诗句……" autocomplete="off" spellcheck="false">
+    <button class="search-clear" id="searchClear" title="清空" hidden>&times;</button>
+  </div>
+
+  <button class="icon-btn" id="orientBtn" title="切换竖排/横排">
+    <svg viewBox="0 0 24 24" width="20" height="20"><path d="M6 4v16M12 4v16M18 4v16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" fill="none"/></svg>
+    <span class="btn-label">竖排</span>
+  </button>
+</header>
+
+<!-- ============ 主体 ============ -->
+<div class="layout">
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-inner">
+      <div class="sidebar-head">
+        <span>卷 目</span>
+        <span class="stat" id="statCount"></span>
+      </div>
+      <div class="filter-row" id="filterRow">
+        <button class="chip is-active" data-chapter="all">全部</button>
+      </div>
+      <nav class="toc" id="toc"></nav>
+      <div class="sidebar-foot">共 <b id="totalCount">0</b> 首 · 依体裁分七卷</div>
+    </div>
+  </aside>
+  <div class="scrim" id="scrim"></div>
+
+  <main class="content" id="content">
+
+    <!-- 卷首语 -->
+    <section class="home" id="home">
+      <div class="home-inner">
+        <div class="home-seal">
+          <span>唐诗</span>
+          <span>三百</span>
+        </div>
+        <h2 class="home-title">熟读唐诗三百首<br>不会作诗也会吟</h2>
+        <p class="home-desc">
+          《唐诗三百首》为清代蘅塘退士孙洙所编，取唐诗脍炙人口者，按体裁分卷。
+          此间收录诸家名篇，配以译文、注释与赏析，以水墨之笺，录盛唐之音。
+        </p>
+        <div class="chapter-cards" id="chapterCards"></div>
+        <div class="home-tip">
+          <span>点击左侧卷目选诗</span>
+          <span class="dot">·</span>
+          <span>支持题名 / 诗人 / 诗句搜索</span>
+          <span class="dot">·</span>
+          <span>可切换竖排</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 诗篇详情 -->
+    <article class="poem" id="poem" hidden>
+      <div class="poem-paper">
+        <div class="poem-head">
+          <h1 class="poem-title" id="poemTitle"></h1>
+          <div class="poem-meta">
+            <span class="poem-author" id="poemAuthor"></span>
+            <span class="sep">·</span>
+            <span class="poem-chapter" id="poemChapter"></span>
+          </div>
+          <div class="poem-rule"><i></i><span class="rule-seal">诗</span><i></i></div>
+        </div>
+
+        <section class="block">
+          <h3 class="block-title"><span>原 文</span></h3>
+          <div class="poem-body" id="poemBody"></div>
+        </section>
+
+        <section class="block" id="blockTr">
+          <h3 class="block-title"><span>译 文</span></h3>
+          <div class="plain" id="poemTrans"></div>
+        </section>
+
+        <section class="block" id="blockNt">
+          <h3 class="block-title"><span>注 释</span></h3>
+          <dl class="notes" id="poemNotes"></dl>
+        </section>
+
+        <section class="block" id="blockAp">
+          <h3 class="block-title"><span>赏 析</span></h3>
+          <div class="plain" id="poemApprec"></div>
+        </section>
+
+        <nav class="poem-nav">
+          <button class="nav-btn" id="prevBtn"><span>←</span><em>上一首</em></button>
+          <button class="nav-center" id="randBtn">随 机</button>
+          <button class="nav-btn" id="nextBtn"><em>下一首</em><span>→</span></button>
+        </nav>
+      </div>
+    </article>
+
+    <!-- 搜索结果 -->
+    <section class="results" id="results" hidden>
+      <div class="results-head" id="resultsHead"></div>
+      <div class="results-list" id="resultsList"></div>
+    </section>
+
+  </main>
+</div>
+
+<footer class="site-foot">
+  <span>唐诗三百首 · 水墨笺注</span>
+  <span class="dot">·</span>
+  <span>纯 HTML / CSS / JavaScript，无框架</span>
+</footer>
+
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
