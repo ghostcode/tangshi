@@ -52,6 +52,14 @@
     prevBtn:    $('#prevBtn'),
     nextBtn:    $('#nextBtn'),
     randBtn:    $('#randBtn'),
+    shareBtn:   $('#shareBtn'),
+    toast:      $('#toast'),
+    shareModal: $('#shareModal'),
+    shareImg:   $('#shareImg'),
+    copyBtn:    $('#copyBtn'),
+    dlBtn:      $('#dlBtn'),
+    closeBtn:   $('#closeBtn'),
+    shareBackdrop: $('#shareBackdrop'),
     search:     $('#searchInput'),
     searchClear: $('#searchClear'),
     orientBtn:  $('#orientBtn'),
@@ -150,6 +158,7 @@
 
   /* ---------- 7. 渲染诗篇 ---------- */
   var currentId = null;
+  var currentItem = null;
   var vertical = localStorage.getItem('ts-vertical') === '1';
 
   function renderPoem(id) {
@@ -158,6 +167,7 @@
 
     var p = it.poem;
     currentId = id;
+    currentItem = it;
 
     el.title.textContent  = p.t;
     el.author.textContent = '〔唐〕' + p.a;
@@ -218,6 +228,262 @@
     btn.innerHTML = isNext ? (core + '<span>' + arrow + '</span>')
                            : ('<span>' + arrow + '</span>' + core);
     btn.onclick = function () { location.hash = '#/' + it.id; };
+  }
+
+  /* 7.1 图片分享：把诗绘成水墨卡片 */
+  var KAI = '"STKaiti","KaiTi","Kaiti SC","Noto Serif SC",serif';
+  var toastTimer;
+
+  function toast(msg) {
+    el.toast.textContent = msg;
+    el.toast.hidden = false;
+    requestAnimationFrame(function () { el.toast.classList.add('is-show'); });
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () {
+      el.toast.classList.remove('is-show');
+      setTimeout(function () { el.toast.hidden = true; }, 300);
+    }, 2200);
+  }
+
+  function wrapByChar(ctx, text, maxWidth) {
+    var chars = String(text).split('');
+    var lines = [], cur = '';
+    for (var i = 0; i < chars.length; i++) {
+      var test = cur + chars[i];
+      if (ctx.measureText(test).width > maxWidth && cur) {
+        lines.push(cur);
+        cur = chars[i];
+      } else {
+        cur = test;
+      }
+    }
+    if (cur) lines.push(cur);
+    return lines;
+  }
+
+  function buildShareCanvas(item) {
+    var p = item.poem;
+    var W = 1080, pad = 86, innerW = W - pad * 2;
+    var measure = document.createElement('canvas').getContext('2d');
+    var F = { title: 78, author: 32, orig: 52, tr: 32, foot: 26 };
+
+    /* 译文按段换行 */
+    var trParas = (p.tr || '').split(/\n+/).filter(function (s) { return s.trim(); });
+    measure.font = 'normal ' + F.tr + 'px ' + KAI;
+    var trLines = [];
+    trParas.forEach(function (par) {
+      wrapByChar(measure, par.trim(), innerW).forEach(function (l) { trLines.push(l); });
+    });
+
+    /* 原文逐行，过长折行 */
+    measure.font = 'normal ' + F.orig + 'px ' + KAI;
+    var origLines = [];
+    p.c.forEach(function (line) {
+      if (measure.measureText(line).width > innerW) {
+        wrapByChar(measure, line, innerW).forEach(function (l) { origLines.push(l); });
+      } else {
+        origLines.push(line);
+      }
+    });
+
+    /* 估算高度 */
+    var y = 120 + F.title + 18 + F.author + 54
+          + F.orig + (origLines.length - 1) * (F.orig + 28);
+    if (trLines.length) y += 56 + F.tr + (trLines.length - 1) * (F.tr + 16);
+    y += 64 + F.foot + 96;
+    var H = Math.max(y, 760);
+
+    var canvas = document.createElement('canvas');
+    canvas.width = W; canvas.height = H;
+    var c = canvas.getContext('2d');
+    c.textBaseline = 'alphabetic';
+    var cx = W / 2;
+
+    /* 宣纸底 */
+    var g = c.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, '#fbf7ee');
+    g.addColorStop(1, '#f1e8d6');
+    c.fillStyle = g;
+    c.fillRect(0, 0, W, H);
+
+    /* 晕染墨团（淡） */
+    function blob(cx2, cy2, r, a) {
+      var rg = c.createRadialGradient(cx2, cy2, 0, cx2, cy2, r);
+      rg.addColorStop(0, 'rgba(40,55,65,' + a + ')');
+      rg.addColorStop(1, 'rgba(40,55,65,0)');
+      c.fillStyle = rg;
+      c.beginPath(); c.arc(cx2, cy2, r, 0, Math.PI * 2); c.fill();
+    }
+    blob(150, H - 120, 260, 0.05);
+    blob(W - 120, 140, 220, 0.04);
+
+    /* 远山（淡墨） */
+    c.save();
+    c.globalAlpha = 0.10;
+    c.fillStyle = '#2b3a44';
+    c.beginPath();
+    c.moveTo(0, H - 150);
+    for (var x = 0; x <= W; x += 60) {
+      c.lineTo(x, H - 150 - Math.sin(x / 130) * 30 - Math.sin(x / 47) * 14);
+    }
+    c.lineTo(W, H); c.lineTo(0, H); c.closePath(); c.fill();
+    c.restore();
+
+    /* 边框 */
+    c.strokeStyle = 'rgba(120,90,60,0.32)';
+    c.lineWidth = 2;
+    c.strokeRect(pad * 0.55, pad * 0.55, W - pad * 1.1, H - pad * 1.1);
+
+    /* 题名 + 作者 */
+    c.textAlign = 'center';
+    var ty = 120 + F.title;
+    c.fillStyle = '#1b1a17';
+    c.font = 'bold ' + F.title + 'px ' + KAI;
+    c.fillText(p.t, cx, ty);
+
+    c.fillStyle = '#6b5a45';
+    c.font = 'normal ' + F.author + 'px ' + KAI;
+    c.fillText('〔唐〕' + p.a, cx, ty + 18 + F.author);
+
+    /* 分隔线 + 中印 */
+    var dy = ty + 18 + F.author + 30;
+    c.strokeStyle = 'rgba(120,90,60,0.30)';
+    c.lineWidth = 1.4;
+    c.beginPath();
+    c.moveTo(cx - 150, dy); c.lineTo(cx - 22, dy);
+    c.moveTo(cx + 22, dy); c.lineTo(cx + 150, dy);
+    c.stroke();
+    c.fillStyle = '#b23b2e';
+    c.fillRect(cx - 16, dy - 16, 32, 32);
+    c.fillStyle = '#fbf7ee';
+    c.font = 'normal 22px ' + KAI;
+    c.fillText('诗', cx, dy + 8);
+
+    /* 原文 */
+    c.fillStyle = '#2a2320';
+    c.font = 'normal ' + F.orig + 'px ' + KAI;
+    var oy = dy + 52;
+    origLines.forEach(function (line, i) {
+      c.fillText(line, cx, oy + i * (F.orig + 28));
+    });
+
+    /* 译文 */
+    var ny = oy + origLines.length * (F.orig + 28) + 40;
+    if (trLines.length) {
+      c.fillStyle = '#7a6a54';
+      c.font = 'normal ' + F.tr + 'px ' + KAI;
+      trLines.forEach(function (line, i) {
+        c.fillText(line, cx, ny + i * (F.tr + 16));
+      });
+      ny += trLines.length * (F.tr + 16);
+    }
+
+    /* 页脚 */
+    c.fillStyle = '#9a8a72';
+    c.font = 'normal ' + F.foot + 'px ' + KAI;
+    c.fillText('唐诗三百首 · 水墨笺注', cx, H - pad - 50);
+
+    /* 右下角印章 */
+    c.fillStyle = '#b23b2e';
+    c.fillRect(W - pad * 0.55 - 54, H - pad * 0.55 - 54, 46, 46);
+    c.fillStyle = '#fbf7ee';
+    c.font = 'normal 28px ' + KAI;
+    c.fillText('唐', W - pad * 0.55 - 31, H - pad * 0.55 - 22);
+
+    return canvas;
+  }
+
+  function fallbackDownload(blobOrCanvas, fileName) {
+    if (blobOrCanvas instanceof HTMLCanvasElement) {
+      var a1 = document.createElement('a');
+      a1.href = blobOrCanvas.toDataURL('image/png');
+      a1.download = fileName;
+      document.body.appendChild(a1); a1.click(); a1.remove();
+      return;
+    }
+    var url = URL.createObjectURL(blobOrCanvas);
+    var a = document.createElement('a');
+    a.href = url; a.download = fileName;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
+  }
+
+  /* 7.2 预览弹层：复制 / 下载 / 关闭 */
+  var shareState = { blob: null, url: null };
+
+  function dataURLToBlob(d) {
+    var arr = d.split(','), mime = arr[0].match(/:(.*?);/)[1];
+    var b = atob(arr[1]), n = b.length, u8 = new Uint8Array(n);
+    while (n--) u8[n] = b.charCodeAt(n);
+    return new Blob([u8], { type: mime });
+  }
+  function canvasToBlob(canvas, cb) {
+    if (canvas.toBlob) { canvas.toBlob(cb, 'image/png'); return; }
+    try { cb(dataURLToBlob(canvas.toDataURL('image/png'))); }
+    catch (e) { cb(null); }
+  }
+
+  function openShareModal() {
+    el.shareModal.hidden = false;
+    requestAnimationFrame(function () { el.shareModal.classList.add('is-open'); });
+    document.body.classList.add('no-scroll');
+  }
+  function closeShareModal() {
+    el.shareModal.classList.remove('is-open');
+    document.body.classList.remove('no-scroll');
+    setTimeout(function () {
+      el.shareModal.hidden = true;
+      if (shareState.url) { URL.revokeObjectURL(shareState.url); shareState.url = null; }
+      el.shareImg.removeAttribute('src');
+      shareState.blob = null;
+    }, 220);
+  }
+
+  function copyImage() {
+    if (!shareState.blob) return;
+    var nav = navigator;
+    if (nav.clipboard && nav.clipboard.write && typeof ClipboardItem !== 'undefined') {
+      nav.clipboard.write([new ClipboardItem({ 'image/png': shareState.blob })])
+        .then(function () { toast('图片已复制到剪贴板'); })
+        .catch(function () { toast('复制失败，请改用下载'); });
+    } else {
+      toast('当前环境不支持复制，请下载图片');
+    }
+  }
+
+  function shareImage() {
+    if (!currentItem || el.shareBtn.disabled) return;
+    var p = currentItem.poem;
+    var prevHTML = el.shareBtn.innerHTML;
+    el.shareBtn.disabled = true;
+    el.shareBtn.classList.add('is-loading');
+    el.shareBtn.innerHTML =
+      '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">' +
+      '<path d="M12 3v12M7 10l5 5 5-5M5 21h14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+      '<span>生成中</span>';
+
+    setTimeout(function () {
+      function finish() {
+        el.shareBtn.disabled = false;
+        el.shareBtn.classList.remove('is-loading');
+        el.shareBtn.innerHTML = prevHTML;
+      }
+      try {
+        var canvas = buildShareCanvas(currentItem);
+        canvasToBlob(canvas, function (blob) {
+          if (!blob) { toast('生成失败，请重试'); finish(); return; }
+          shareState.blob = blob;
+          shareState.url  = URL.createObjectURL(blob);
+          el.shareImg.src = shareState.url;
+          el.shareImg.alt = p.t + ' · ' + p.a;
+          openShareModal();
+          finish();
+        });
+      } catch (e) {
+        toast('生成失败，请重试');
+        finish();
+      }
+    }, 30);
   }
 
   /* ---------- 8. 搜索 ---------- */
@@ -365,6 +631,17 @@
     location.hash = '#/' + FLAT[next].id;
   });
 
+  /* 图片分享 */
+  el.shareBtn.addEventListener('click', shareImage);
+  el.copyBtn.addEventListener('click', copyImage);
+  el.dlBtn.addEventListener('click', function () {
+    if (!shareState.blob) return;
+    fallbackDownload(shareState.blob, (currentItem.poem.t || 'tangshi') + '.png');
+    toast('已开始下载');
+  });
+  el.closeBtn.addEventListener('click', closeShareModal);
+  el.shareBackdrop.addEventListener('click', closeShareModal);
+
   /* 移动端抽屉 */
   function openDrawer()  { el.sidebar.classList.add('is-open'); el.scrim.classList.add('is-on'); }
   function closeDrawer() { el.sidebar.classList.remove('is-open'); el.scrim.classList.remove('is-on'); }
@@ -382,6 +659,7 @@
 
   /* 键盘：← → 翻页，/ 聚焦搜索 */
   document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && !el.shareModal.hidden) { closeShareModal(); return; }
     var tag = (e.target.tagName || '').toLowerCase();
     if (tag === 'input' || tag === 'textarea') return;
 

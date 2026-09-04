@@ -708,3 +708,129 @@ body::before{
   .content{ padding:0; }
   .poem-paper{ box-shadow:none; border:none; }
 }
+
+/* ============================================================
+   图片分享按钮 + 轻提示
+   ============================================================ */
+.poem-actions{
+  position:absolute;
+  top:14px;
+  right:14px;
+  z-index:3;
+}
+.share-btn{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:7px 13px 7px 11px;
+  border:1px solid var(--line);
+  border-radius:999px;
+  background:rgba(255,253,247,.82);
+  color:var(--ink-2);
+  font-family:var(--serif);
+  font-size:13px;
+  letter-spacing:.04em;
+  cursor:pointer;
+  backdrop-filter:blur(4px);
+  box-shadow:var(--shadow-s);
+  transition:border-color .2s var(--ease), color .2s var(--ease),
+             transform .15s var(--ease), opacity .2s var(--ease);
+}
+.share-btn:hover{
+  border-color:var(--cinnabar);
+  color:var(--cinnabar);
+  transform:translateY(-1px);
+}
+.share-btn:active{ transform:translateY(0) scale(.97); }
+.share-btn:disabled{ opacity:.6; cursor:default; transform:none; }
+.share-btn svg{ display:block; }
+.share-btn.is-loading svg{ animation:spin 1s linear infinite; }
+@keyframes spin{ to{ transform:rotate(360deg); } }
+
+@media (max-width:520px){
+  .poem-actions{ top:8px; right:8px; }
+  .share-btn span{ display:none; }
+  .share-btn{ padding:7px; }
+}
+
+.toast{
+  position:fixed;
+  left:50%;
+  bottom:34px;
+  transform:translateX(-50%) translateY(12px);
+  padding:11px 20px;
+  border:1px solid var(--line);
+  border-radius:999px;
+  background:rgba(37,33,28,.92);
+  color:#f5ede0;
+  font-family:var(--serif);
+  font-size:14px;
+  letter-spacing:.04em;
+  box-shadow:var(--shadow-m);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .26s var(--ease), transform .26s var(--ease);
+  z-index:60;
+}
+.toast.is-show{
+  opacity:1;
+  transform:translateX(-50%) translateY(0);
+}
+
+/* ============================================================
+   图片分享预览弹层（复制 / 下载 / 关闭）
+   ============================================================ */
+.share-modal{
+  position:fixed; inset:0; z-index:80;
+  display:flex; align-items:center; justify-content:center;
+  padding:24px;
+}
+.share-modal[hidden]{ display:none; }
+.share-backdrop{
+  position:absolute; inset:0;
+  background:rgba(20,17,14,.62);
+  backdrop-filter:blur(3px);
+  opacity:0;
+  transition:opacity .22s var(--ease);
+}
+.share-modal.is-open .share-backdrop{ opacity:1; }
+.share-dialog{
+  position:relative; z-index:1;
+  width:min(440px,92vw);
+  max-height:92vh;
+  display:flex; flex-direction:column;
+  background:var(--paper-2);
+  border:1px solid var(--line);
+  border-radius:14px;
+  box-shadow:var(--shadow-l);
+  transform:translateY(12px) scale(.98);
+  opacity:0;
+  transition:transform .24s var(--ease), opacity .24s var(--ease);
+}
+.share-modal.is-open .share-dialog{ transform:none; opacity:1; }
+.share-stage{ padding:16px 16px 10px; overflow:auto; }
+.share-stage img{
+  display:block; width:100%; height:auto;
+  border-radius:8px; background:#fff;
+  box-shadow:var(--shadow-s);
+}
+.share-actions{ display:flex; gap:8px; padding:10px 16px 16px; }
+.share-act{
+  flex:1; padding:11px 8px;
+  border:1px solid var(--line); border-radius:10px;
+  background:rgba(255,253,247,.9);
+  color:var(--ink-2);
+  font-family:var(--serif); font-size:14px; letter-spacing:.04em;
+  cursor:pointer;
+  transition:border-color .2s var(--ease), color .2s var(--ease), background .2s var(--ease);
+}
+.share-act:hover{ border-color:var(--ink-3); color:var(--ink); }
+.share-act.primary{ background:var(--cinnabar); border-color:var(--cinnabar); color:#fbf3ea; }
+.share-act.primary:hover{ background:var(--cinnabar-2); border-color:var(--cinnabar-2); color:#fff; }
+body.no-scroll{ overflow:hidden; }
+
+@media (max-width:520px){
+  .share-dialog{ width:94vw; }
+  .share-actions{ flex-wrap:wrap; }
+  .share-act{ flex:1 1 30%; }
+}
