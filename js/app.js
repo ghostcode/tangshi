@@ -464,10 +464,8 @@
     var nav = navigator;
     if (nav.clipboard && nav.clipboard.write && typeof ClipboardItem !== 'undefined') {
       nav.clipboard.write([new ClipboardItem({ 'image/png': shareState.blob })])
-        .then(function () { flashBtn(el.copyBtn, '已复制'); toast('图片已复制到剪贴板'); })
-        .catch(function () { toast('复制失败，请改用下载'); });
-    } else {
-      toast('当前环境不支持复制，请下载图片');
+        .then(function () { flashBtn(el.copyBtn, '已复制'); })
+        .catch(function () { /* 复制被拒，保持原按钮文案 */ });
     }
   }
 
@@ -658,7 +656,6 @@
     if (!shareState.blob) return;
     fallbackDownload(shareState.blob, (currentItem.poem.t || 'tangshi') + '.png');
     flashBtn(el.dlBtn, '已下载');
-    toast('已开始下载');
   });
   el.closeBtn.addEventListener('click', closeShareModal);
   el.shareBackdrop.addEventListener('click', closeShareModal);
