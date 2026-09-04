@@ -245,6 +245,20 @@
     }, 2200);
   }
 
+  /* 按钮临时成功态：3 秒后复原（防重复点击并自动覆盖倒计时） */
+  var flashTimer = {};
+  function flashBtn(btn, text) {
+    if (!btn) return;
+    if (btn._flashOrig == null) btn._flashOrig = btn.textContent;
+    clearTimeout(flashTimer[btn.id]);
+    btn.textContent = text;
+    btn.classList.add('is-done');
+    flashTimer[btn.id] = setTimeout(function () {
+      btn.textContent = btn._flashOrig;
+      btn.classList.remove('is-done');
+    }, 3000);
+  }
+
   function wrapByChar(ctx, text, maxWidth) {
     var chars = String(text).split('');
     var lines = [], cur = '';
@@ -436,6 +450,12 @@
       if (shareState.url) { URL.revokeObjectURL(shareState.url); shareState.url = null; }
       el.shareImg.removeAttribute('src');
       shareState.blob = null;
+      /* 复位复制/下载按钮，避免残留成功态 */
+      [el.copyBtn, el.dlBtn].forEach(function (b) {
+        if (b._flashOrig != null) b.textContent = b._flashOrig;
+        clearTimeout(flashTimer[b.id]);
+        b.classList.remove('is-done');
+      });
     }, 220);
   }
 
@@ -444,7 +464,7 @@
     var nav = navigator;
     if (nav.clipboard && nav.clipboard.write && typeof ClipboardItem !== 'undefined') {
       nav.clipboard.write([new ClipboardItem({ 'image/png': shareState.blob })])
-        .then(function () { toast('图片已复制到剪贴板'); })
+        .then(function () { flashBtn(el.copyBtn, '已复制'); toast('图片已复制到剪贴板'); })
         .catch(function () { toast('复制失败，请改用下载'); });
     } else {
       toast('当前环境不支持复制，请下载图片');
@@ -637,6 +657,7 @@
   el.dlBtn.addEventListener('click', function () {
     if (!shareState.blob) return;
     fallbackDownload(shareState.blob, (currentItem.poem.t || 'tangshi') + '.png');
+    flashBtn(el.dlBtn, '已下载');
     toast('已开始下载');
   });
   el.closeBtn.addEventListener('click', closeShareModal);

@@ -809,6 +809,16 @@ body::before{
 }
 .share-modal.is-open .share-dialog{ transform:none; opacity:1; }
 .share-stage{ padding:16px 16px 10px; overflow:auto; }
+.share-close{
+  position:absolute; top:8px; right:8px; z-index:2;
+  width:34px; height:34px; padding:0;
+  border:none; border-radius:50%;
+  background:rgba(27,26,23,.5); color:#fbf3ea;
+  font-size:22px; line-height:1; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  transition:background .2s var(--ease), transform .18s var(--ease);
+}
+.share-close:hover{ background:var(--cinnabar); transform:rotate(90deg); }
 .share-stage img{
   display:block; width:100%; height:auto;
   border-radius:8px; background:#fff;
@@ -827,6 +837,8 @@ body::before{
 .share-act:hover{ border-color:var(--ink-3); color:var(--ink); }
 .share-act.primary{ background:var(--cinnabar); border-color:var(--cinnabar); color:#fbf3ea; }
 .share-act.primary:hover{ background:var(--cinnabar-2); border-color:var(--cinnabar-2); color:#fff; }
+.share-act.is-done{ background:var(--celadon); border-color:var(--celadon); color:#fbf3ea; cursor:default; }
+.share-act.is-done:hover{ background:var(--celadon); border-color:var(--celadon); color:#fbf3ea; }
 body.no-scroll{ overflow:hidden; }
 
 @media (max-width:520px){
